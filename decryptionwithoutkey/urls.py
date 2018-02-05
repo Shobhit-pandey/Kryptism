@@ -7,5 +7,5 @@ urlpatterns = [
     # url(r'^$', 'Kryptism.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
-    url(r'^', views.home, name='home'),
+    url(r'^$', views.home, name='home'),
 ]

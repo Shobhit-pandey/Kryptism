@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+<head>
+{% block head %}
+    <title>Encryption | Ceasor</title>
+{% endblock %}
+</head>
+<body>
+
+  {% block content %}
+      <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Submit</button>
+      </form>
+{% endblock %}
+
+</body>

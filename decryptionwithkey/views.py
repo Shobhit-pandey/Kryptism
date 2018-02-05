@@ -5,4 +5,4 @@ from django.shortcuts import render
 
 
 def home(request):
-    return render(request, 'dwkhome.html')
+    return render(request, 'dwk/dwkhome.html')
