@@ -18,8 +18,15 @@ def ceasor(request):
         form = Ceasor(request.POST)
         if form.is_valid():
             plain_text = request.POST['input']
+            key = request.POST['key']
             print(plain_text)
-            return HttpResponse("DONE")
+            plain_text = str(plain_text)
+            cipher = ""
+            key=int(key)
+            for i in plain_text:
+                cipher+=(chr)((ord(i)+key-65)%26 +65)
+            print(cipher)
+            return HttpResponse(cipher)
         else:
             form = Ceasor()
     return render(request, 'en/ceasor.html', {'form': form})
