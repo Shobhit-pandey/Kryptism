@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block head %}
+    <title> Decryption | Playfair</title>
+{% endblock %}
+
+{% block content %}
+    <h3>Playfair Decryption</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}

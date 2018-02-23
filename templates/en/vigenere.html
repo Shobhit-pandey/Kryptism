@@ -1,15 +1,13 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
-
 {% block head %}
-    <title>Encryption | Ceasor</title>
+    <title> Encryption | Vigenere</title>
 {% endblock %}
   {% block content %}
-      <h3>Shifting Encryption</h3>
+      <h3>Vigenere Encryption</h3>
       <form method="post">
       {% csrf_token %}
       {{ form.as_p }}
       <button type="submit">Submit</button>
       </form>
 {% endblock %}
-
