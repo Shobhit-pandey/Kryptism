@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
-
 {% block head %}
-    <title>Encryption | Ceasor</title>
+    <title> Decryption | Vigenere</title>
 {% endblock %}
   {% block content %}
-      <h3>Ceasor Encryption</h3>
+      <h3>Vigenere Decryption</h3>
       <form method="post">
       {% csrf_token %}
       {{ form.as_p }}

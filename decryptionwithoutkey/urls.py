@@ -8,4 +8,5 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^$', views.home, name='home'),
+    url(r'^ceasor/$', views.filter_ceasor, name='ceasor'),
 ]
