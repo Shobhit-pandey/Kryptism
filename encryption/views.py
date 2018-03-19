@@ -1,3 +1,4 @@
+import pyDes
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -5,7 +6,9 @@ from django.shortcuts import render
 
 from django.shortcuts import render
 
-from encryption.forms import Ceasor, Vigenere, PlayFair, HillChipher
+from encryption.forms import Ceasor, Vigenere, PlayFair, HillChipher, Des
+from DESCommon import DES, generate_keys
+from DESUtil import to_binary, add_pads_if_necessary, hex_to_bin, bin_to_hex, bin_to_text
 
 
 def enhome(request):
@@ -21,6 +24,7 @@ def ceasor(request):
             key = request.POST['key']
             print(plain_text)
             plain_text = str(plain_text)
+            plain_text = plain_text.upper()
             cipher = ""
             key = int(key)
             for i in plain_text:
@@ -224,3 +228,48 @@ def hillcipher(request):
         else:
             form = HillChipher()
     return render(request, 'en/hillcipher.html', {'form': form})
+
+def des(request):
+    form = Des()
+    if request.method == 'POST':
+        form = Des(request.POST)
+        if form.is_valid():
+            plain_text = request.POST['input']
+            key = request.POST['key']
+            plain_text = str(plain_text)
+            key = (str)(key)
+            if (len(key) < 8):
+                return HttpResponse("Key must be 8 characters in length")
+            cipher_text = encrypt(plain_text,key)
+            return HttpResponse("Encrypted text : " +(cipher_text) )
+        else:
+            return HttpResponse("Error in Form")
+    else:
+        form = Des()
+    return render(request,'en/des.html',{'form':form})
+
+
+def get_bits(plaintext):
+    text_bits = []
+    for i in plaintext:
+        text_bits.extend(to_binary(ord(i)))
+    return text_bits
+
+
+def encrypt(plaintext, key_text):
+    keys = generate_keys(key_text)
+
+    text_bits = get_bits(plaintext)
+    text_bits = add_pads_if_necessary(text_bits)
+
+    final_cipher = ''
+    for i in range(0, len(text_bits), 64):
+        final_cipher += DES(text_bits, i, (i + 64), keys)
+
+    # conversion of binary cipher into hex-decimal form
+    hex_cipher = ''
+    i = 0
+    while i < len(final_cipher):
+        hex_cipher += bin_to_hex(final_cipher[i:i + 4])
+        i = i + 4
+    return hex_cipher

@@ -8,4 +8,5 @@ urlpatterns = [
     url(r'^hill-cipher/$', views.hillcipher, name='hillcipher'),
     url(r'^vigenere/$', views.vigenere, name='vigenere'),
     url(r'^playfair/$', views.playfair, name='playfair'),
+    url(r'^des/$', views.des, name='des'),
 ]

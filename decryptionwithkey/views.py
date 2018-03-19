@@ -1,10 +1,15 @@
 from django.http import HttpResponse
 from django.shortcuts import render
+from DESCommon import DES, generate_keys
+from DESUtil import to_binary, add_pads_if_necessary, hex_to_bin, bin_to_hex, bin_to_text
+
 
 # Create your views here.
 from django.shortcuts import render
+import pyDes
 
-from decryptionwithkey.forms import Ceasor, Vigenere, PlayFair, HillCipher
+from DESUtil import to_binary
+from decryptionwithkey.forms import Ceasor, Vigenere, PlayFair, HillCipher, SDes, Des
 
 
 def home(request):
@@ -20,6 +25,7 @@ def ceasor(request):
             key = request.POST['key']
             print(cipher_text)
             cipher_text = str(cipher_text)
+            cipher_text = cipher_text.upper()
             plain_text = ""
             key = int(key)
             for i in cipher_text:
@@ -68,12 +74,14 @@ def vigenere(request):
             form = Vigenere()
     return render(request, 'dwk/vigenere.html', {'form': form})
 
-def modInverse(a, m) :
+
+def modInverse(a, m):
     a = a % m;
-    for x in range(1, m) :
-        if ((a * x) % m == 1) :
+    for x in range(1, m):
+        if ((a * x) % m == 1):
             return x
     return 1
+
 
 def hillcipher_decrypt(plaintext, alphabet, key, is_square, chunk, stov, vtos):
     import math
@@ -171,7 +179,7 @@ def playfair_cipher_to_digraphs(cipher):
     return new
 
 
-def playfair_decrypt(cipher,key):
+def playfair_decrypt(cipher, key):
     cipher = playfair_cipher_to_digraphs(cipher)
     key_matrix = playfair_matrix(key)
     plaintext = []
@@ -216,7 +224,7 @@ def playfair(request):
             cipher_text = str(cipher_text)
             key = str(key)
             key = key.upper()
-            cipher_text=cipher_text.upper()
+            cipher_text = cipher_text.upper()
             message_digraph = playfair_cipher_to_digraphs(cipher_text)
             matrix = playfair_matrix(key)
             plain_text = playfair_decrypt(cipher_text, key)
@@ -224,3 +232,152 @@ def playfair(request):
         else:
             form = PlayFair()
     return render(request, 'dwk/playfair.html', {'form': form})
+
+
+def sdes(request):
+    form = SDes()
+    if request.method == 'POST':
+        form = SDes(request.POST)
+        if form.is_valid():
+            # parameters
+            # key = "0111111101"
+            # cipher = "10100010"
+            cipher = request.POST['input']
+            key = request.POST['key']
+            cipher = str(cipher)
+            key = str(key)
+            P10 = (3, 5, 2, 7, 4, 10, 1, 9, 8, 6)
+            P8 = (6, 3, 7, 4, 8, 5, 10, 9)
+            P4 = (2, 4, 3, 1)
+            IP = (2, 6, 3, 1, 4, 8, 5, 7)
+            IPi = (4, 1, 3, 5, 7, 2, 8, 6)
+            E = (4, 1, 2, 3, 2, 3, 4, 1)
+            S0 = [
+                [1, 0, 3, 2],
+                [3, 2, 1, 0],
+                [0, 2, 1, 3],
+                [3, 1, 3, 2]
+            ]
+            S1 = [
+                [0, 1, 2, 3],
+                [2, 0, 1, 3],
+                [3, 0, 1, 0],
+                [2, 1, 0, 3]
+            ]
+
+            def permutation(perm, key):
+                permutated_key = ""
+                for i in perm:
+                    permutated_key += key[i - 1]
+                return permutated_key
+
+            def generate_first_key(left_key, right_key):
+                left_key_rot = left_key[1:] + left_key[:1]
+                right_key_rot = right_key[1:] + right_key[:1]
+                key_rot = left_key_rot + right_key_rot
+                return permutation(P8, key_rot)
+
+            def generate_second_key(left_key, right_key):
+                left_key_rot = left_key[3:] + left_key[:3]
+                right_key_rot = right_key[3:] + right_key[:3]
+                key_rot = left_key_rot + right_key_rot
+                return permutation(P8, key_rot)
+
+            def F(right, subkey):
+                expanded_cipher = permutation(E, right)
+                xor_cipher = bin(int(expanded_cipher, 2) ^ int(subkey, 2))[2:].zfill(8)
+                left_xor_cipher = xor_cipher[:4]
+                right_xor_cipher = xor_cipher[4:]
+                left_sbox_cipher = Sbox(left_xor_cipher, S0)
+                right_sbox_cipher = Sbox(right_xor_cipher, S1)
+                return permutation(P4, left_sbox_cipher + right_sbox_cipher)
+
+            def Sbox(input, sbox):
+                row = int(input[0] + input[3], 2)
+                column = int(input[1] + input[2], 2)
+                return bin(sbox[row][column])[2:].zfill(4)
+
+            def f(first_half, second_half, key):
+                left = int(first_half, 2) ^ int(F(second_half, key), 2)
+                print
+                "Fk: " + bin(left)[2:].zfill(4) + second_half
+                return bin(left)[2:].zfill(4), second_half
+
+            p10key = permutation(P10, key)
+            left = p10key[:len(p10key) / 2]
+            right = p10key[len(p10key) / 2:]
+            first_key = generate_first_key(left, right)
+            second_key = generate_second_key(left, right)
+            print
+            "[*] First key: " + first_key
+            print
+            "[*] Second key: " + second_key
+            permutated_cipher = permutation(IP, cipher)
+            print
+            "IP: " + permutated_cipher
+            first_half_cipher = permutated_cipher[:len(permutated_cipher) / 2]
+            second_half_cipher = permutated_cipher[len(permutated_cipher) / 2:]
+            left, right = f(first_half_cipher, second_half_cipher, second_key)
+            print
+            "SW: " + right + left
+            left, right = f(right, left, first_key)  # switch left and right!
+            print
+            "IP^-1: " + permutation(IPi, left + right)
+            return HttpResponse("Decrypted text : " + str(permutation(IPi, left + right)))
+
+        else:
+            form = SDes()
+    return render(request, 'dwk/sdes.html', {'form': form})
+
+
+def des(request):
+    form = Des()
+
+    if request.method == 'POST':
+        form = Des(request.POST)
+        if form.is_valid():
+            cipher_text = request.POST['input']
+            key = request.POST['key']
+            cipher_text = str(cipher_text)
+            key = (str)(key)
+            if (len(key) < 8):
+                return HttpResponse("Key must be 8 characters in length")
+            plaintext = decrypt(cipher_text, key)
+            return HttpResponse("Decrypted text : " + (plaintext))
+        else:
+            return HttpResponse("Error in Form")
+    else:
+        form = Des()
+    return render(request, 'dwk/des.html', {'form': form})
+
+
+def get_bits(plaintext):
+    text_bits = []
+    for i in plaintext:
+        text_bits.extend(to_binary(ord(i)))
+    return text_bits
+
+
+def decrypt(cipher, key_text):
+    keys = generate_keys(key_text)
+
+    text_bits = []
+    ciphertext = ''
+    for i in cipher:
+        # conversion of hex-decimal form to binary form
+        ciphertext += hex_to_bin(i)
+    for i in ciphertext:
+        text_bits.append(int(i))
+
+    text_bits = add_pads_if_necessary(text_bits)
+    keys.reverse()
+    bin_mess = ''
+    for i in range(0, len(text_bits), 64):
+        bin_mess += DES(text_bits, i, (i + 64), keys)
+
+    i = 0
+    text_mess = ''
+    while i < len(bin_mess):
+        text_mess += bin_to_text(bin_mess[i:i + 8])
+        i = i + 8
+    return text_mess.rstrip('\x00')
