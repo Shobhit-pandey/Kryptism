@@ -2,11 +2,11 @@
 {% load staticfiles %}
 
 {% block head %}
-    <title> Decryption | Playfair</title>
+    <title> Cryptoanalysis | Playfair</title>
 {% endblock %}
 
 {% block content %}
-    <h3>Playfair Decryption</h3>
+    <h3>Playfair Cryptoanalysis</h3>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}

@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 {% block head %}
-    <title> Decryption | Vigenere</title>
+    <title> Cryptoanalysis | Vigenere</title>
 {% endblock %}
   {% block content %}
-      <h3>Vigenere Decryption</h3>
+      <h3>Vigenere Cryptoanalysis</h3>
       <form method="post">
       {% csrf_token %}
       {{ form.as_p }}

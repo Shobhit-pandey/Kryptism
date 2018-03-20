@@ -2,10 +2,10 @@
 {% load staticfiles %}
 
 {% block head %}
-    <title>Decryption | Hill Cipher</title>
+    <title>Cryptoanalysis | Hill Cipher</title>
 {% endblock %}
   {% block content %}
-      <h3>Hill Cipher Encryption</h3>
+      <h3>Hill Cipher Cryptoanalysis</h3>
       <form method="post">
       {% csrf_token %}
       {{ form.as_p }}
