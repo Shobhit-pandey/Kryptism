@@ -11,4 +11,8 @@ urlpatterns = [
     url(r'^vigenere/$', views.vigenere, name='vigenere'),
     url(r'^playfair/$', views.playfair, name='playfair'),
     url(r'^des/$', views.des, name='des'),
+    url(r'^triple-des/$', views.tripledes, name='tripledes'),
+    url(r'^substitution/$', views.substitution, name='substitution'),
+    url(r'^railfence/$', views.railfence, name='railfence'),
+
 ]

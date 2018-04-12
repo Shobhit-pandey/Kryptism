@@ -2,15 +2,18 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from DESCommon import DES, generate_keys
 from DESUtil import to_binary, add_pads_if_necessary, hex_to_bin, bin_to_hex, bin_to_text
-
-
+from pycipher import SimpleSubstitution
 # Create your views here.
 from django.shortcuts import render
 import pyDes
 
 from DESUtil import to_binary
-from decryptionwithkey.forms import Ceasor, Vigenere, PlayFair, HillCipher, SDes, Des
-
+from decryptionwithkey.forms import Ceasor, Vigenere, PlayFair, HillCipher, SDes, Des, TripleDes, Substitution, \
+    RailFence
+import string
+import binascii
+import base64
+import encryption.pyDes
 
 def home(request):
     return render(request, 'dwk/dwkhome.html')
@@ -234,6 +237,137 @@ def playfair(request):
     return render(request, 'dwk/playfair.html', {'form': form})
 
 
+rounds = 2
+alphabet = string.ascii_uppercase
+
+
+def sdes_bin_to_ascii_4bit(bin_string):
+    h1, h2 = sdes_split_half(bin_string)
+    return alphabet[sdes_bin_to_int(h1)] + alphabet[sdes_bin_to_int(h2)]
+
+
+def sdes_P10(data):
+    box = [3, 5, 2, 7, 4, 10, 1, 9, 8, 6]
+    return "".join(list(map(lambda x: data[x - 1], box)))
+
+
+def sdes_P8(data):
+    box = [6, 3, 7, 4, 8, 5, 10, 9]
+    return "".join(list(map(lambda x: data[x - 1], box)))
+
+
+def sdes_P4(data):
+    box = [2, 4, 3, 1]
+    return "".join(list(map(lambda x: data[x - 1], box)))
+
+
+def sdes_S0(data):
+    row = sdes_bin_to_int(data[0] + data[3])
+    col = sdes_bin_to_int(data[1] + data[2])
+    box = [["01", "00", "11", "10"],
+           ["11", "10", "01", "00"],
+           ["00", "10", "01", "11"],
+           ["11", "01", "11", "10"]
+           ]
+
+    return box[row][col]
+
+
+def sdes_S1(data):
+    row = sdes_bin_to_int(data[0] + data[3])
+    col = sdes_bin_to_int(data[1] + data[2])
+    box = [["00", "01", "10", "11"],
+           ["10", "00", "01", "11"],
+           ["11", "00", "01", "00"],
+           ["10", "01", "00", "11"]
+           ]
+
+    return box[row][col]
+
+
+def sdes_IP(data):
+    box = [2, 6, 3, 1, 4, 8, 5, 7]
+    return "".join(list(map(lambda x: data[x - 1], box)))
+
+
+def sdes_IP_1(data):
+    box = [4, 1, 3, 5, 7, 2, 8, 6]
+    return "".join(list(map(lambda x: data[x - 1], box)))
+
+
+def sdes_E_P(data):
+    box = [4, 1, 2, 3, 2, 3, 4, 1]
+    return "".join(list(map(lambda x: data[x - 1], box)))
+
+
+def sdes_XOR(data, key):
+    return "".join(list(map(lambda x, y: str(int(x) ^ int(y)), data, key)))
+
+
+def sdes_LS(data, amount):
+    return data[amount:] + data[:amount]
+
+
+def sdes_SW(data):
+    data1, data2 = sdes_split_half(data)
+    return data2 + data1
+
+
+def sdes_split_half(data):
+    return data[:int(len(data) / 2)], data[int(len(data) / 2):]
+
+
+def sdes_int_to_bin(data):
+    return "{0:b}".format(data)
+
+
+def sdes_bin_to_int(data):
+    return int(data, 2)
+
+
+def sdes_generate_round_keys(key, rounds):
+    round_keys = []
+    k_h1, k_h2 = sdes_split_half(sdes_P10(key))
+
+    s = 0
+    for i in range(1, rounds + 1):
+        s += i
+        h1, h2 = sdes_LS(k_h1, s), sdes_LS(k_h2, s)
+        round_keys.append(sdes_P8(h1 + h2))
+
+    return round_keys
+
+
+def sdes_decrypt(data, key, comments=False):
+    round_keys = list(reversed(sdes_generate_round_keys(key, rounds)))
+    ip1, ip2 = sdes_split_half(sdes_IP(data))
+    if comments:
+        print("IP: {}".format(ip1 + ip2))
+
+    for i, r_key in enumerate(round_keys):
+        data = sdes_E_P(ip2)
+        data = sdes_XOR(data, r_key)
+        d1, d2 = sdes_split_half(data)
+        d1 = sdes_S0(d1)
+        d2 = sdes_S1(d2)
+        data = sdes_XOR(ip1, sdes_P4(d1 + d2)) + ip2
+        if comments and i == 0:
+            print("First Fk: {}".format(data))
+        elif comments and i == 1:
+            print("Second Fk: {}".format(data))
+
+        if i != len(round_keys) - 1:
+            ip1, ip2 = sdes_split_half(sdes_SW(data))
+            if comments:
+                print("SW: {}".format(ip1 + ip2))
+        else:
+            plaintext = sdes_IP_1(data)
+            if comments:
+                print("IP-1: {}".format(plaintext))
+
+    return plaintext
+
+
 def sdes(request):
     form = SDes()
     if request.method == 'POST':
@@ -246,84 +380,11 @@ def sdes(request):
             key = request.POST['key']
             cipher = str(cipher)
             key = str(key)
-            P10 = (3, 5, 2, 7, 4, 10, 1, 9, 8, 6)
-            P8 = (6, 3, 7, 4, 8, 5, 10, 9)
-            P4 = (2, 4, 3, 1)
-            IP = (2, 6, 3, 1, 4, 8, 5, 7)
-            IPi = (4, 1, 3, 5, 7, 2, 8, 6)
-            E = (4, 1, 2, 3, 2, 3, 4, 1)
-            S0 = [
-                [1, 0, 3, 2],
-                [3, 2, 1, 0],
-                [0, 2, 1, 3],
-                [3, 1, 3, 2]
-            ]
-            S1 = [
-                [0, 1, 2, 3],
-                [2, 0, 1, 3],
-                [3, 0, 1, 0],
-                [2, 1, 0, 3]
-            ]
-
-            def permutation(perm, key):
-                permutated_key = ""
-                for i in perm:
-                    permutated_key += key[i - 1]
-                return permutated_key
-
-            def generate_first_key(left_key, right_key):
-                left_key_rot = left_key[1:] + left_key[:1]
-                right_key_rot = right_key[1:] + right_key[:1]
-                key_rot = left_key_rot + right_key_rot
-                return permutation(P8, key_rot)
-
-            def generate_second_key(left_key, right_key):
-                left_key_rot = left_key[3:] + left_key[:3]
-                right_key_rot = right_key[3:] + right_key[:3]
-                key_rot = left_key_rot + right_key_rot
-                return permutation(P8, key_rot)
-
-            def F(right, subkey):
-                expanded_cipher = permutation(E, right)
-                xor_cipher = bin(int(expanded_cipher, 2) ^ int(subkey, 2))[2:].zfill(8)
-                left_xor_cipher = xor_cipher[:4]
-                right_xor_cipher = xor_cipher[4:]
-                left_sbox_cipher = Sbox(left_xor_cipher, S0)
-                right_sbox_cipher = Sbox(right_xor_cipher, S1)
-                return permutation(P4, left_sbox_cipher + right_sbox_cipher)
-
-            def Sbox(input, sbox):
-                row = int(input[0] + input[3], 2)
-                column = int(input[1] + input[2], 2)
-                return bin(sbox[row][column])[2:].zfill(4)
-
-            def f(first_half, second_half, key):
-                left = int(first_half, 2) ^ int(F(second_half, key), 2)
-                print
-                "Fk: " + bin(left)[2:].zfill(4) + second_half
-                return bin(left)[2:].zfill(4), second_half
-
-            p10key = permutation(P10, key)
-            left = p10key[:len(p10key) / 2]
-            right = p10key[len(p10key) / 2:]
-            first_key = generate_first_key(left, right)
-            second_key = generate_second_key(left, right)
-            print
-            "[*] First key: " + first_key
-            print
-            "[*] Second key: " + second_key
-            permutated_cipher = permutation(IP, cipher)
-            print
-            "IP: " + permutated_cipher
-            first_half_cipher = permutated_cipher[:len(permutated_cipher) / 2]
-            second_half_cipher = permutated_cipher[len(permutated_cipher) / 2:]
-            left, right = f(first_half_cipher, second_half_cipher, second_key)
-            print
-            "SW: " + right + left
-            left, right = f(right, left, first_key)  # switch left and right!
-            print
-            "IP^-1: " + permutation(IPi, left + right)
-            return HttpResponse("Decrypted text : " + str(permutation(IPi, left + right)))
+            # print("Ciphertext: {} ({})".format(cipher, bin_to_ascii_4bit(cipher)))
+            # print("Key: {}".format(key))
+            d = sdes_decrypt(cipher, key, comments=True)
+            print("Decrypted: {} ({})".format(d, sdes_bin_to_ascii_4bit(d)))
+            return HttpResponse("Decrypted: {} ({})".format(d, sdes_bin_to_ascii_4bit(d)))
 
         else:
             form = SDes()
@@ -332,7 +393,6 @@ def sdes(request):
 
 def des(request):
     form = Des()
-
     if request.method == 'POST':
         form = Des(request.POST)
         if form.is_valid():
@@ -342,7 +402,7 @@ def des(request):
             key = (str)(key)
             if (len(key) < 8):
                 return HttpResponse("Key must be 8 characters in length")
-            plaintext = decrypt(cipher_text, key)
+            plaintext = des_decrypt(cipher_text, key)
             return HttpResponse("Decrypted text : " + (plaintext))
         else:
             return HttpResponse("Error in Form")
@@ -358,7 +418,7 @@ def get_bits(plaintext):
     return text_bits
 
 
-def decrypt(cipher, key_text):
+def des_decrypt(cipher, key_text):
     keys = generate_keys(key_text)
 
     text_bits = []
@@ -381,3 +441,140 @@ def decrypt(cipher, key_text):
         text_mess += bin_to_text(bin_mess[i:i + 8])
         i = i + 8
     return text_mess.rstrip('\x00')
+
+
+def tripledes_decrypt(iv, key, data):
+    iv = binascii.unhexlify(iv)
+    key = binascii.unhexlify(key)
+    k = pyDes.triple_des(key, pyDes.CBC, iv, pad=None, padmode=pyDes.PAD_PKCS5)
+    data = base64.decodestring(data)
+    d = k.decrypt(data)
+    return d
+
+
+def tripledes(request):
+    form = TripleDes()
+    if request.method == 'POST':
+        form = TripleDes(request.POST)
+        if form.is_valid():
+            # IV has to be 8bit long
+            iv = '2132435465768797'
+            cipher = request.POST['input']
+            key = request.POST['key']
+            plain = str(cipher)
+            key = str(key)
+            decryptdata = tripledes_decrypt(iv, key, cipher)
+            return HttpResponse("Plain Text: %s" % decryptdata)
+    else:
+        form = TripleDes()
+    return render(request, 'dwk/tripledes.html', {'form': form})
+
+
+def substitution(request):
+    form = Substitution()
+    if request.method == 'POST':
+        form = Substitution(request.POST)
+        if form.is_valid():
+            cipher = request.POST['input']
+            key = request.POST['key']
+            cipher = str(cipher)
+            key = str(key)
+            ss = SimpleSubstitution(key)
+            plain= ss.decipher(cipher)
+            return HttpResponse("Plain Text: %s" % plain)
+    else:
+        form = Substitution()
+    return render(request, 'dwk/substitution.html', {'form': form})
+
+
+def railfence_printFence(fence):
+    for rail in range(len(fence)):
+        print
+        ''.join(fence[rail])
+
+
+def railfence_encryptFence(plain, rails, offset=0, debug=False):
+    cipher = ''
+
+    # offset
+    plain = '#' * offset + plain
+
+    length = len(plain)
+    fence = [['#'] * length for _ in range(rails)]
+
+    # build fence
+    rail = 0
+    for x in range(length):
+        fence[rail][x] = plain[x]
+        if rail >= rails - 1:
+            dr = -1
+        elif rail <= 0:
+            dr = 1
+        rail += dr
+
+    # print pretty fence
+    if debug:
+        railfence_printFence(fence)
+
+    # read fence
+    for rail in range(rails):
+        for x in range(length):
+            if fence[rail][x] != '#':
+                cipher += fence[rail][x]
+    return cipher
+
+
+def railfence_decryptFence(cipher, rails, offset=0, debug=False):
+    plain = ''
+
+    # offset
+    if offset:
+        t = railfence_encryptFence('o' * offset + 'x' * len(cipher), rails)
+        for i in range(len(t)):
+            if (t[i] == 'o'):
+                cipher = cipher[:i] + '#' + cipher[i:]
+
+    length = len(cipher)
+    fence = [['#'] * length for _ in range(rails)]
+
+    # build fence
+    i = 0
+    for rail in range(rails):
+        p = (rail != (rails - 1))
+        x = rail
+        while (x < length and i < length):
+            fence[rail][x] = cipher[i]
+            if p:
+                x += 2 * (rails - rail - 1)
+            else:
+                x += 2 * rail
+            if (rail != 0) and (rail != (rails - 1)):
+                p = not p
+            i += 1
+
+    # print pretty fence
+    if debug:
+        railfence_printFence(fence)
+
+    # read fence
+    for i in range(length):
+        for rail in range(rails):
+            if fence[rail][i] != '#':
+                plain += fence[rail][i]
+    return plain
+
+
+def railfence(request):
+    form = RailFence()
+    if request.method == 'POST':
+        form = RailFence(request.POST)
+        if form.is_valid():
+            cipher = request.POST['input']
+            key = request.POST['key']
+            cipher = str(cipher)
+            key = int(key)
+            plain = railfence_decryptFence(cipher, key, offset=0, debug=True)
+            return HttpResponse("Decrypyed Text: %s" % plain)
+    else:
+        form = RailFence()
+    return render(request, 'dwk/railfence.html', {'form': form})

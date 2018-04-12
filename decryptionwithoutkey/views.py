@@ -74,7 +74,10 @@ def vigenere(request):
                     for n in range(65, 91):
                         z = t.count(chr(n))
                         i += z * (z - 1)
-                    ic.append(i / (len(t) * (len(t) - 1)))
+                    try:
+                        ic.append(i / (len(t) * (len(t) - 1)))
+                    except:
+                        return HttpResponse("Invalid INPUT...")
                 ic_total.append(sum(ic) / len(ic))
                 print("For " + (str)(y) + "  size  " + (str)(ic_total[y - 2]))
                 if get == 0:
@@ -147,3 +150,65 @@ def vigenere(request):
     else:
         form = CryptoAnalysis()
     return render(request, 'dwok/vigenere.html', {'form': form})
+
+
+
+def substitution_cipher(request):
+    from pycipher import SimpleSubstitution as SimpleSub
+    import random
+    import re
+    from decryptionwithoutkey.ngram_score import ngram_score
+    fitness = ngram_score('english_quadgrams.txt')  # load our quadgram statistics
+    if request.method == 'POST':
+        form = CryptoAnalysis(request.POST)
+        if form.is_valid():
+            cipher = request.POST['input']
+            cipher = str(cipher)
+            ctext = cipher.upper()
+            ctext = re.sub('[^A-Z]', '', ctext.upper())
+            maxkey = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+            maxscore = -99e9
+            parentscore, parentkey = maxscore, maxkey[:]
+            print("Substitution Cipher solver, you may have to wait several iterations")
+            print("for the correct result. Press ctrl+c to exit program.")
+            # keep going until we are killed by the user
+            i = 0
+            k = 0
+            best_key = ''
+            plaintext = ''
+            while k < 30:
+                i = i + 1
+                random.shuffle(parentkey)
+                deciphered = SimpleSub(parentkey).decipher(ctext)
+                parentscore = fitness.score(deciphered)
+                count = 0
+                while count < 1000:
+                    a = random.randint(0, 25)
+                    b = random.randint(0, 25)
+                    child = parentkey[:]
+                    # swap two characters in the child
+                    child[a], child[b] = child[b], child[a]
+                    deciphered = SimpleSub(child).decipher(ctext)
+                    score = fitness.score(deciphered)
+                    # if the child was better, replace the parent with it
+                    if score > parentscore:
+                        parentscore = score
+                        parentkey = child[:]
+                        count = 0
+                    count = count + 1
+                # keep track of best score seen so far
+                k += 1
+                if parentscore > maxscore:
+                    maxscore, maxkey = parentscore, parentkey[:]
+                    print('\nbest score so far:', maxscore, 'on iteration', i)
+                    ss = SimpleSub(maxkey)
+                    best_key = ''.join(maxkey)
+                    plaintext = ss.decipher(ctext)
+                    # print('    best key: ' + ''.join(maxkey))
+                    # print('    plaintext: ' + ss.decipher(ctext))
+            return HttpResponse("KEY = "+ str(best_key) +" \nPLAIN TEXT =   "+plaintext)
+        else:
+            return HttpResponse("Form is not valid")
+    else:
+        form = CryptoAnalysis()
+    return render(request, 'dwok/substution.html', {'form': form})

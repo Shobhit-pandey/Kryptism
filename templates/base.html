@@ -257,10 +257,14 @@
                 <a href="#encryption" data-toggle="collapse" aria-expanded="false">Encryption</a>
                 <ul class="collapse list-unstyled" id="encryption">
                     <li><a href="{% url 'en:ceasor' %}">Ceasor</a></li>
+                    <li><a href="{% url 'en:substitution' %}">Substitution</a></li>
+                    <li><a href="{% url 'en:railfence' %}">Rail Fence</a></li>
                     <li><a href="{% url 'en:playfair' %}">PlayFair</a></li>
                     <li><a href="{% url 'en:hillcipher' %}">Hill Cipher</a></li>
                     <li><a href="{% url 'en:vigenere' %}">Vigenere</a></li>
+                    <li><a href="{% url 'en:sdes' %}">SDes</a></li>
                     <li><a href="{% url 'en:des' %}">Des</a></li>
+                    <li><a href="{% url 'en:tripledes' %}">Triple Des</a></li>
                 </ul>
             </li>
             <li>
@@ -271,11 +275,14 @@
                         <a href="#withkey" data-toggle="collapse" aria-expanded="false">With Key</a>
                         <ul class="collapse list-unstyled" id="withkey">
                             <li><a href="{% url 'dwk:ceasor' %}">Ceasor</a></li>
+                            <li><a href="{% url 'dwk:railfence' %}">Rail Fence</a></li>
+                            <li><a href="{% url 'dwk:substitution' %}">Substitution</a></li>
                             <li><a href="{% url 'dwk:playfair' %}">PlayFair</a></li>
                             <li><a href="{% url 'dwk:hillcipher' %}">Hill Cipher</a></li>
                             <li><a href="{% url 'dwk:vigenere' %}">Vigenere</a></li>
                             <li><a href="{% url 'dwk:sdes' %}">SDES</a></li>
                             <li><a href="{% url 'dwk:des' %}">DES</a></li>
+                            <li><a href="{% url 'dwk:tripledes' %}">Triple Des</a></li>
                         </ul>
                     </li>
                     <li>
@@ -285,6 +292,7 @@
                             <li><a href="#">PlayFair</a></li>
                             <li><a href="#">Hill Cipher</a></li>
                             <li><a href="{% url 'dwok:vigenere' %}">Vigenere</a></li>
+                            <li><a href="{% url 'dwok:substution' %}">Substitution</a></li>
                         </ul>
                     </li>
 
