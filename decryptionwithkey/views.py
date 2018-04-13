@@ -9,10 +9,11 @@ import pyDes
 
 from DESUtil import to_binary
 from decryptionwithkey.forms import Ceasor, Vigenere, PlayFair, HillCipher, SDes, Des, TripleDes, Substitution, \
-    RailFence
+    RailFence, RSA
 import string
 import binascii
 import base64
+import random
 import encryption.pyDes
 
 def home(request):
@@ -34,7 +35,7 @@ def ceasor(request):
             for i in cipher_text:
                 plain_text += (chr)((ord(i) - key - 65) % 26 + 65)
             print(plain_text)
-            return HttpResponse(plain_text)
+            return HttpResponse("Plain Text : "+plain_text)
         else:
             form = Ceasor()
     return render(request, 'dwk/ceasor.html', {'form': form})
@@ -72,7 +73,7 @@ def vigenere(request):
             shift = 1
             matrix = [source[(i + shift) % 26] for i in range(len(source))]
             plain_text = vigenere_decoder(cipher_text, source, matrix, key)
-            return HttpResponse(plain_text)
+            return HttpResponse("Plain Text : "+plain_text)
         else:
             form = Vigenere()
     return render(request, 'dwk/vigenere.html', {'form': form})
@@ -131,10 +132,10 @@ def hillcipher(request):
             key = key.upper()
             cipher_text = cipher_text.upper()
             plain_text = hillcipher_decrypt(cipher_text, alphabet, key, is_square, chunk, stov, vtos)
-            return HttpResponse(plain_text)
+            return HttpResponse("Plain Text : "+plain_text)
         else:
             form = HillCipher()
-    return render(request, 'en/hillcipher.html', {'form': form})
+    return render(request, 'dwk/hillcipher.html', {'form': form})
 
 
 def playfair_matrix(key):
@@ -231,9 +232,11 @@ def playfair(request):
             message_digraph = playfair_cipher_to_digraphs(cipher_text)
             matrix = playfair_matrix(key)
             plain_text = playfair_decrypt(cipher_text, key)
-            return HttpResponse(plain_text)
+            return HttpResponse("PLAIN TEXT : "+plain_text)
         else:
-            form = PlayFair()
+            return HttpResponse("Form not valid")
+    else:
+        form = PlayFair()
     return render(request, 'dwk/playfair.html', {'form': form})
 
 
@@ -578,3 +581,34 @@ def railfence(request):
     else:
         form = RailFence()
     return render(request, 'dwk/railfence.html', {'form': form})
+
+
+def rsa(request):
+    form = RSA()
+    if request.method == 'POST':
+        form = RSA(request.POST)
+        if form.is_valid():
+            cipher = request.POST['input']
+            key1 = request.POST['key1']
+            key2 = request.POST['key2']
+            cipher = (cipher)
+            # cipher = [373L, 144L, 330L, 276L, 196L, 330L, 276L, 196L, 264L, 144L, 168L, 174L, 144L, 330L, 231L, 196L,
+            #           40L, 159L, 2L, 179L, 288L, 59L]
+            key1 = int(key1)
+            key2 = int(key2)
+            cipher = cipher.replace(",","")
+            cipher = cipher.replace("L", "")
+            cipher=cipher.split()
+            new_cipher = []
+            for i in cipher:
+                new_cipher.append(int(i))
+            print(new_cipher)
+            plain = [chr((char ** key1) % key2) for char in new_cipher]
+            print(plain)
+            # cipher = [373L, 144L, 330L, 276L, 196L, 330L, 276L, 196L, 264L, 144L, 168L, 174L, 144L, 330L, 231L, 196L, 40L, 159L, 2L, 179L, 288L, 59L]
+            # key1 = 259
+            # key2 = 391
+            return HttpResponse("Plain Text: " + ''.join(plain) )
+    else:
+        form = RSA()
+    return render(request, 'dwk/rsa.html', {'form': form})

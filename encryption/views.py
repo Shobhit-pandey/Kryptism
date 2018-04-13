@@ -6,7 +6,7 @@ from pycipher import SimpleSubstitution
 from django.shortcuts import render
 
 from encryption import pyDes
-from encryption.forms import Ceasor, Vigenere, PlayFair, HillChipher, Des, SDes, TripleDes, Substitution, RailFence
+from encryption.forms import Ceasor, Vigenere, PlayFair, HillChipher, Des, SDes, TripleDes, Substitution, RailFence, RSA
 from DESCommon import DES, generate_keys
 from DESUtil import to_binary, add_pads_if_necessary, hex_to_bin, bin_to_hex, bin_to_text
 import string
@@ -33,7 +33,7 @@ def ceasor(request):
             for i in plain_text:
                 cipher += (chr)((ord(i) + key - 65) % 26 + 65)
             print(cipher)
-            return HttpResponse(cipher)
+            return HttpResponse("Cipher Text : "+cipher)
         else:
             form = Ceasor()
     return render(request, 'en/ceasor.html', {'form': form})
@@ -71,7 +71,7 @@ def vigenere(request):
             shift = 1
             matrix = [source[(i + shift) % 26] for i in range(len(source))]
             cipher_text = vigenere_encoder(plain_text, source, matrix, key)
-            return HttpResponse(cipher_text)
+            return HttpResponse("Cipher Text : "+cipher_text)
         else:
             form = Vigenere()
     return render(request, 'en/vigenere.html', {'form': form})
@@ -183,7 +183,7 @@ def playfair(request):
             message_digraph = playfair_message_to_digraphs(plain_text)
             matrix = playfair_matrix(key)
             cipher_text = playfair_encrypt(plain_text, key)
-            return HttpResponse(cipher_text)
+            return HttpResponse("Cipher Text : "+cipher_text)
         else:
             form = PlayFair()
     return render(request, 'en/playfair.html', {'form': form})
@@ -227,7 +227,7 @@ def hillcipher(request):
             key = key.upper()
             plain_text = plain_text.upper()
             cipher_text = hillcipher_encrypt(plain_text, alphabet, key, is_square, chunk, stov, vtos)
-            return HttpResponse(cipher_text)
+            return HttpResponse("Cipher Text : "+cipher_text)
         else:
             form = HillChipher()
     return render(request, 'en/hillcipher.html', {'form': form})
@@ -557,3 +557,121 @@ def railfence(request):
     else:
         form = RailFence()
     return render(request, 'en/railfence.html', {'form': form})
+
+
+def rsa_gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+
+'''
+Euclid's extended algorithm for finding the multiplicative inverse of two numbers
+'''
+
+
+def rsa_multiplicative_inverse(e, phi):
+    d = 0
+    x1 = 0
+    x2 = 1
+    y1 = 1
+    temp_phi = phi
+
+    while e > 0:
+        temp1 = temp_phi / e
+        temp2 = temp_phi - temp1 * e
+        temp_phi = e
+        e = temp2
+
+        x = x2 - temp1 * x1
+        y = d - temp1 * y1
+
+        x2 = x1
+        x1 = x
+        d = y1
+        y1 = y
+
+    if temp_phi == 1:
+        return d + phi
+
+
+'''
+Tests to see if a number is prime.
+'''
+
+
+def rsa_is_prime(num):
+    if num == 2:
+        return True
+    if num < 2 or num % 2 == 0:
+        return False
+    for n in xrange(3, int(num ** 0.5) + 2, 2):
+        if num % n == 0:
+            return False
+    return True
+
+
+def rsa_generate_keypair(p, q):
+    if not (rsa_is_prime(p) and rsa_is_prime(q)):
+        raise ValueError('Both numbers must be prime.')
+    elif p == q:
+        raise ValueError('p and q cannot be equal')
+    # n = pq
+    n = p * q
+
+    # Phi is the totient of n
+    phi = (p - 1) * (q - 1)
+
+    # Choose an integer e such that e and phi(n) are coprime
+    e = random.randrange(1, phi)
+
+    # Use Euclid's Algorithm to verify that e and phi(n) are comprime
+    g = rsa_gcd(e, phi)
+    while g != 1:
+        e = random.randrange(1, phi)
+        g = rsa_gcd(e, phi)
+
+    # Use Extended Euclid's Algorithm to generate the private key
+    d = rsa_multiplicative_inverse(e, phi)
+
+    # Return public and private keypair
+    # Public key is (e, n) and private key is (d, n)
+    return ((e, n), (d, n))
+
+
+def rsa_encrypt(pk, plaintext):
+    # Unpack the key into it's components
+    key, n = pk
+    # Convert each letter in the plaintext to numbers based on the character using a^b mod m
+    cipher = [(ord(char) ** key) % n for char in plaintext]
+    # Return the array of bytes
+    return cipher
+
+
+def rsa_decrypt(pk, ciphertext):
+    # Unpack the key into its components
+    key, n = pk
+    # Generate the plaintext based on the ciphertext and key using a^b mod m
+    plain = [chr((char ** key) % n) for char in ciphertext]
+    # Return the array of bytes as a string
+    return ''.join(plain)
+
+
+def rsa(request):
+    form = RSA()
+    if request.method == 'POST':
+        form = RSA(request.POST)
+        if form.is_valid():
+            plain = request.POST['input']
+            prime1 = request.POST['prime1']
+            prime2 = request.POST['prime2']
+            plain = str(plain)
+            prime1 = int(prime1)
+            prime2 = int(prime2)
+            public, private = rsa_generate_keypair(prime1, prime2)
+            encrypted_msg = rsa_encrypt(private, plain)
+            cipher = ''.join(map(lambda x: str(x), encrypted_msg))
+            return HttpResponse("Encrypted Text: " + str(encrypted_msg) + " public key "+ str(public) + "private key = " + str(private))
+    else:
+        form = RSA()
+    return render(request, 'en/rsa.html', {'form': form})
