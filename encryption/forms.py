@@ -45,6 +45,10 @@ class RailFence(forms.Form):
     input = forms.CharField(label="Plain Text", max_length=100000000000000000000000000000,widget=forms.Textarea(attrs={'cols': 80, 'rows': 20,'placeholder': 'Plain Text to encrypt by RailFence...'}))
     key = forms.CharField(required=True,widget=forms.Textarea(attrs={'cols': 20, 'rows': 1,'placeholder': 'Key in integer'}))
 
+class OTP(forms.Form):
+    input = forms.CharField(label="Plain Text", max_length=100000000000000000000000000000,widget=forms.Textarea(attrs={'cols': 80, 'rows': 20,'placeholder': 'Plain Text to encrypt by OTP...'}))
+    key = forms.CharField(required=True,widget=forms.Textarea(attrs={'cols': 20, 'rows': 1,'placeholder': 'Key'}))
+
 
 class RSA(forms.Form):
     input = forms.CharField(label="Plain Text", max_length=100000000000000000000000000000, help_text='PLain Text to Encrypt  by RSA...',widget=forms.Textarea(attrs={'cols': 80, 'rows': 20,'placeholder': 'Plain Text to encrypt by RSA...'}))

@@ -266,6 +266,7 @@
                     <li><a href="{% url 'en:des' %}">Des</a></li>
                     <li><a href="{% url 'en:tripledes' %}">Triple Des</a></li>
                     <li><a href="{% url 'en:rsa' %}">RSA</a></li>
+                    <li><a href="{% url 'en:otp' %}">OTP</a></li>
                 </ul>
             </li>
             <li>
@@ -285,6 +286,7 @@
                             <li><a href="{% url 'dwk:des' %}">DES</a></li>
                             <li><a href="{% url 'dwk:tripledes' %}">Triple Des</a></li>
                             <li><a href="{% url 'dwk:rsa' %}">RSA</a></li>
+                            <li><a href="{% url 'dwk:otp' %}">OTP</a></li>
                         </ul>
                     </li>
                     <li>
@@ -292,7 +294,7 @@
                         <ul class="collapse list-unstyled" id="withoutkey">
                             <li><a href="{% url 'dwok:ceasor' %}">Ceasor</a></li>
                             <li><a href="#">PlayFair</a></li>
-                            <li><a href="#">Hill Cipher</a></li>
+                            <li><a href="{% url 'dwok:hill_known_plaintext' %}">Hill Cipher</a></li>
                             <li><a href="{% url 'dwok:vigenere' %}">Vigenere</a></li>
                             <li><a href="{% url 'dwok:substution' %}">Substitution</a></li>
                         </ul>

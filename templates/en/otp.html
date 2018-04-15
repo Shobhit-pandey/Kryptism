@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block head %}
+    <title>Encryption | OTP</title>
+{% endblock %}
+  {% block content %}
+      <h3>OTP Encryption</h3>
+      <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Submit</button>
+      </form>
+{% endblock %}
+

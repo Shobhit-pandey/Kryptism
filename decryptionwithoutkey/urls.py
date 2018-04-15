@@ -11,4 +11,5 @@ urlpatterns = [
     url(r'^ceasor/$', views.filter_ceasor, name='ceasor'),
     url(r'^vigenere/$', views.vigenere, name='vigenere'),
     url(r'^substution/$', views.substitution_cipher, name='substution'),
+    url(r'^hill-cipher/$', views.hill_known_plaintext, name='hill_known_plaintext'),
 ]

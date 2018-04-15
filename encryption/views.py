@@ -6,7 +6,8 @@ from pycipher import SimpleSubstitution
 from django.shortcuts import render
 
 from encryption import pyDes
-from encryption.forms import Ceasor, Vigenere, PlayFair, HillChipher, Des, SDes, TripleDes, Substitution, RailFence, RSA
+from encryption.forms import Ceasor, Vigenere, PlayFair, HillChipher, Des, SDes, TripleDes, Substitution, RailFence, \
+    RSA, OTP
 from DESCommon import DES, generate_keys
 from DESUtil import to_binary, add_pads_if_necessary, hex_to_bin, bin_to_hex, bin_to_text
 import string
@@ -71,7 +72,10 @@ def vigenere(request):
             shift = 1
             matrix = [source[(i + shift) % 26] for i in range(len(source))]
             cipher_text = vigenere_encoder(plain_text, source, matrix, key)
-            return HttpResponse("Cipher Text : "+cipher_text)
+            cipher = ''
+            for i in cipher_text:
+                cipher += i
+            return HttpResponse("Cipher Text : "+(str)(cipher))
         else:
             form = Vigenere()
     return render(request, 'en/vigenere.html', {'form': form})
@@ -675,3 +679,24 @@ def rsa(request):
     else:
         form = RSA()
     return render(request, 'en/rsa.html', {'form': form})
+
+
+def otp(request):
+    if request.method == 'POST':
+        form = OTP(request.POST)
+        if form.is_valid():
+            plain = request.POST['input']
+            key = request.POST['key']
+            plain = str(plain.upper())
+            key = str(key.upper())
+            if(len(key)<len(plain)):
+                return HttpResponse("KEY is shorter than plain text")
+            cipher = ''
+            for i in range(0, len(plain)):
+                cipher += chr(((ord(plain[i]) + ord(key[i]) - 130)%26) + 65)
+            return HttpResponse("CIPHER TEXT BY OTP METHOD -  " + cipher)
+        else:
+            return HttpResponse("FORM NOT VALID")
+    else:
+        form = OTP()
+    return render(request,'en/otp.html',{'form':form})

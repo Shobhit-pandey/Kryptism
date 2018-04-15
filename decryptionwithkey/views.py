@@ -15,6 +15,8 @@ import binascii
 import base64
 import random
 import encryption.pyDes
+from encryption.forms import OTP
+
 
 def home(request):
     return render(request, 'dwk/dwkhome.html')
@@ -73,7 +75,10 @@ def vigenere(request):
             shift = 1
             matrix = [source[(i + shift) % 26] for i in range(len(source))]
             plain_text = vigenere_decoder(cipher_text, source, matrix, key)
-            return HttpResponse("Plain Text : "+plain_text)
+            plain = ''
+            for i in plain_text:
+                plain+=i
+            return HttpResponse("Plain Text : "+str(plain))
         else:
             form = Vigenere()
     return render(request, 'dwk/vigenere.html', {'form': form})
@@ -612,3 +617,24 @@ def rsa(request):
     else:
         form = RSA()
     return render(request, 'dwk/rsa.html', {'form': form})
+
+
+def otp(request):
+    if request.method == 'POST':
+        form = OTP(request.POST)
+        if form.is_valid():
+            cipher = request.POST['input']
+            key = request.POST['key']
+            cipher = str(cipher.upper())
+            key = str(key.upper())
+            if (len(key) < len(cipher)):
+                return HttpResponse("KEY is shorter than Cipher text")
+            plain = ''
+            for i in range(0, len(cipher)):
+                plain += chr(((ord(cipher[i])-ord(key[i]))%26)+65)
+            return HttpResponse("{PLAIN TEXT BY OTP METHOD -  " + plain)
+        else:
+            return HttpResponse("FORM NOT VALID")
+    else:
+        form = OTP()
+    return render(request,'en/otp.html',{'form':form})

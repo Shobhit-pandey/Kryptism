@@ -15,4 +15,5 @@ urlpatterns = [
     url(r'^substitution/$', views.substitution, name='substitution'),
     url(r'^railfence/$', views.railfence, name='railfence'),
     url(r'^rsa/$', views.rsa, name='rsa'),
+    url(r'^otp/$', views.otp, name='otp'),
 ]
