@@ -187,7 +187,7 @@ def playfair(request):
             message_digraph = playfair_message_to_digraphs(plain_text)
             matrix = playfair_matrix(key)
             cipher_text = playfair_encrypt(plain_text, key)
-            return HttpResponse("Cipher Text : "+cipher_text)
+            return HttpResponse("Cipher Text : "+str(cipher_text))
         else:
             form = PlayFair()
     return render(request, 'en/playfair.html', {'form': form})
