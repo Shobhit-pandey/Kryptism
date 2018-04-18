@@ -133,6 +133,7 @@ def hillcipher(request):
             cipher_text = request.POST['input']
             key = request.POST['key']
             cipher_text = str(cipher_text)
+            cipher_text = cipher_text.replace(" ", "")
             key = str(key)
             key = key.upper()
             cipher_text = cipher_text.upper()

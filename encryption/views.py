@@ -227,6 +227,7 @@ def hillcipher(request):
             plain_text = request.POST['input']
             key = request.POST['key']
             plain_text = str(plain_text)
+            plain_text = plain_text.replace(" ","")
             key = str(key)
             key = key.upper()
             plain_text = plain_text.upper()
