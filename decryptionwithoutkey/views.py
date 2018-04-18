@@ -144,7 +144,7 @@ def vigenere(request):
                 count += 1
             plain = ''.join(map(str, original_text))
             print(plain)
-            return HttpResponse("KEY = " + str(f_key) + " \n  " + plain)
+            return HttpResponse("KEY = \n\n\n\n" + str(f_key) + " \n\n\n\n\n\n\n PLAIN TEXT ==  " + plain)
         else:
             return HttpResponse("Form is not valid")
     else:
