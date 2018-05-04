@@ -55,5 +55,5 @@ class RSA(forms.Form):
     input = forms.CharField(label="Cipher Text ", max_length=100000000000000000000000000000,
                             widget=forms.Textarea(attrs={'cols': 80, 'rows': 20,'placeholder': '373L, 144L, 330L, 276L, 196L, 330L, 276L, 196L, 264L, 144L, 168L, 174L, 144L, 330L, 231L, 196L, 40L, 159L, 2L, 179L, 288L, 59L'})
                             )
-    key1 = forms.CharField(required=True,widget=forms.Textarea(attrs={'cols': 20, 'rows': 1,'placeholder': 'Your first value of Public Key'}))
-    key2 = forms.CharField( required=True,widget=forms.Textarea(attrs={'cols': 20, 'rows': 1,'placeholder': 'Your Second value of Public Key'}))
+    key1 = forms.CharField(required=True,widget=forms.Textarea(attrs={'cols': 20, 'rows': 1,'placeholder': 'Private key'}))
+    key2 = forms.CharField( required=True,widget=forms.Textarea(attrs={'cols': 20, 'rows': 1,'placeholder': 'N (Parameter)'}))

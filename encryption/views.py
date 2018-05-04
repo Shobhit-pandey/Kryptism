@@ -674,7 +674,7 @@ def rsa(request):
             prime1 = int(prime1)
             prime2 = int(prime2)
             public, private = rsa_generate_keypair(prime1, prime2)
-            encrypted_msg = rsa_encrypt(private, plain)
+            encrypted_msg = rsa_encrypt(public, plain)
             cipher = ''.join(map(lambda x: str(x), encrypted_msg))
             return HttpResponse("Encrypted Text: " + str(encrypted_msg) + " public key "+ str(public) + "private key = " + str(private))
     else:
