@@ -11,4 +11,19 @@
         {{ form.as_p }}
         <button type="submit">Submit</button>
     </form>
+    {% if plain %}
+          <script> window.location.hash = '#plain'; </script>
+          <h2 id="plain">
+          Expected Plain text is -
+          <p>
+              {{ plain }}
+          </p>
+          All Plain text possible -
+              {% for alll in all_plain %}
+          <p>
+              {{ alll }}
+          </p>
+          {% endfor %}
+          </h2>
+      {% endif %}
 {% endblock %}

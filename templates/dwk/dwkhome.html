@@ -7,4 +7,13 @@
 <body>
 Decryption With key
 </body>
+{% if plain %}
+          <script> window.location.hash = '#plain'; </script>
+          <h2 id="plain">
+          Cipher text is -
+          <p>
+              {{ plain }}
+          </p>
+          </h2>
+      {% endif %}
 </html>

@@ -39,7 +39,16 @@ def filter_ceasor(request):
             for i in range(26):
                 scores.append((fitness.score(Caesar(i).decipher(cipher_text)), i))
             key = max(scores)
-            return HttpResponse(Caesar(key[1]).decipher(cipher_text) + (str)("\n" + all_plain))
+            filtered_plain = Caesar(key[1]).decipher(cipher_text)
+            k=0
+            al_p = []
+            for i in all_plain:
+                for j in i:
+                    al_p.append(j)
+                al_p.append("\n")
+            all_plain = list(all_plain)
+            return render(request, 'dwok/ceasor.html', {'form': form,'plain':filtered_plain,'all_plain':all_plain})
+            # return HttpResponse(Caesar(key[1]).decipher(cipher_text) + (str)("\n" + all_plain))
         else:
             return HttpResponse("Form is not valid")
     else:
@@ -144,7 +153,8 @@ def vigenere(request):
                 count += 1
             plain = ''.join(map(str, original_text))
             print(plain)
-            return HttpResponse("KEY = \n\n\n\n" + str(f_key) + " \n\n\n\n\n\n\n PLAIN TEXT ==  " + plain)
+            return render(request, 'dwok/vigenere.html', {'form': form,'key':f_key,'plain':plain})
+            # return HttpResponse("KEY = \n\n\n\n" + str(f_key) + " \n\n\n\n\n\n\n PLAIN TEXT ==  " + plain)
         else:
             return HttpResponse("Form is not valid")
     else:
@@ -205,7 +215,8 @@ def substitution_cipher(request):
                     plaintext = ss.decipher(ctext)
                     # print('    best key: ' + ''.join(maxkey))
                     # print('    plaintext: ' + ss.decipher(ctext))
-            return HttpResponse("KEY = " + str(best_key) + " \nPLAIN TEXT =   " + plaintext)
+                    return render(request, 'dwok/substution.html', {'form': form,'key':best_key,'plain':plaintext})
+            # return HttpResponse("KEY = " + str(best_key) + " \nPLAIN TEXT =   " + plaintext)
         else:
             return HttpResponse("Form is not valid")
     else:
@@ -324,7 +335,8 @@ def hill_known_plaintext(request):
                                 plain_text += vtos(y.tolist(), alphabet)
                             print("FINAL PLAIN TEXT IS - ")
                             print(plain_text)
-                            return HttpResponse("PLAIN TEXT : " + plain_text + " KEY =  " + str(ko))
+                            return render(request, 'dwok/hillcipher.html', {'form': form,'key':ko,'plain':plain_text})
+                            # return HttpResponse("PLAIN TEXT : " + plain_text + " KEY =  " + str(ko))
                         except Exception as e:
                             pass
                     elif (i * i == len(known_plaintext)):

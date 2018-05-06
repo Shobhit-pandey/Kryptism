@@ -36,8 +36,9 @@ def ceasor(request):
             key = int(key)
             for i in cipher_text:
                 plain_text += (chr)((ord(i) - key - 65) % 26 + 65)
-            print(plain_text)
-            return HttpResponse("Plain Text : "+plain_text)
+            # print(plain_text)
+            return render(request, 'dwk/ceasor.html', {'form': form, 'plain': plain_text})
+            # return HttpResponse("Plain Text : "+plain_text)
         else:
             form = Ceasor()
     return render(request, 'dwk/ceasor.html', {'form': form})
@@ -77,8 +78,9 @@ def vigenere(request):
             plain_text = vigenere_decoder(cipher_text, source, matrix, key)
             plain = ''
             for i in plain_text:
-                plain+=i
-            return HttpResponse("Plain Text : "+str(plain))
+                plain += i
+            return render(request, 'dwk/vigenere.html', {'form': form, 'plain': plain_text})
+            # return HttpResponse("Plain Text : "+str(plain))
         else:
             form = Vigenere()
     return render(request, 'dwk/vigenere.html', {'form': form})
@@ -138,7 +140,8 @@ def hillcipher(request):
             key = key.upper()
             cipher_text = cipher_text.upper()
             plain_text = hillcipher_decrypt(cipher_text, alphabet, key, is_square, chunk, stov, vtos)
-            return HttpResponse("Plain Text : "+plain_text)
+            return render(request, 'dwk/hillcipher.html', {'form': form, 'plain': plain_text})
+            # return HttpResponse("Plain Text : "+plain_text)
         else:
             form = HillCipher()
     return render(request, 'dwk/hillcipher.html', {'form': form})
@@ -238,7 +241,8 @@ def playfair(request):
             message_digraph = playfair_cipher_to_digraphs(cipher_text)
             matrix = playfair_matrix(key)
             plain_text = playfair_decrypt(cipher_text, key)
-            return HttpResponse("PLAIN TEXT : "+plain_text)
+            return render(request, 'dwk/playfair.html', {'form': form, 'plain': plain_text})
+            # return HttpResponse("PLAIN TEXT : "+plain_text)
         else:
             return HttpResponse("Form not valid")
     else:
@@ -392,8 +396,9 @@ def sdes(request):
             # print("Ciphertext: {} ({})".format(cipher, bin_to_ascii_4bit(cipher)))
             # print("Key: {}".format(key))
             d = sdes_decrypt(cipher, key, comments=True)
-            print("Decrypted: {} ({})".format(d, sdes_bin_to_ascii_4bit(d)))
-            return HttpResponse("Decrypted: {} ({})".format(d, sdes_bin_to_ascii_4bit(d)))
+            plain_text = "".format(d, sdes_bin_to_ascii_4bit(d))
+            return render(request, 'dwk/sdes.html', {'form': form, 'plain': plain_text})
+            # return HttpResponse("Decrypted: {} ({})".format(d, sdes_bin_to_ascii_4bit(d)))
 
         else:
             form = SDes()
@@ -412,7 +417,8 @@ def des(request):
             if (len(key) < 8):
                 return HttpResponse("Key must be 8 characters in length")
             plaintext = des_decrypt(cipher_text, key)
-            return HttpResponse("Decrypted text : " + (plaintext))
+            return render(request, 'dwk/des.html', {'form': form, 'plain': plaintext})
+            # return HttpResponse("Decrypted text : " + (plaintext))
         else:
             return HttpResponse("Error in Form")
     else:
@@ -473,7 +479,8 @@ def tripledes(request):
             plain = str(cipher)
             key = str(key)
             decryptdata = tripledes_decrypt(iv, key, cipher)
-            return HttpResponse("Plain Text: %s" % decryptdata)
+            return render(request, 'dwk/tripledes.html', {'form': form, 'plain': decryptdata})
+            # return HttpResponse("Plain Text: %s" % decryptdata)
     else:
         form = TripleDes()
     return render(request, 'dwk/tripledes.html', {'form': form})
@@ -489,8 +496,9 @@ def substitution(request):
             cipher = str(cipher)
             key = str(key)
             ss = SimpleSubstitution(key)
-            plain= ss.decipher(cipher)
-            return HttpResponse("Plain Text: %s" % plain)
+            plain = ss.decipher(cipher)
+            return render(request, 'dwk/substitution.html', {'form': form, 'plain': plain})
+            # return HttpResponse("Plain Text: %s" % plain)
     else:
         form = Substitution()
     return render(request, 'dwk/substitution.html', {'form': form})
@@ -583,7 +591,8 @@ def railfence(request):
             cipher = str(cipher)
             key = int(key)
             plain = railfence_decryptFence(cipher, key, offset=0, debug=True)
-            return HttpResponse("Decrypyed Text: %s" % plain)
+            return render(request, 'dwk/railfence.html', {'form': form, 'plain': plain})
+            # return HttpResponse("Decrypyed Text: %s" % plain)
     else:
         form = RailFence()
     return render(request, 'dwk/railfence.html', {'form': form})
@@ -602,19 +611,18 @@ def rsa(request):
             #           40L, 159L, 2L, 179L, 288L, 59L]
             key1 = int(key1)
             key2 = int(key2)
-            cipher = cipher.replace(",","")
+            cipher = cipher.replace(",", "")
             cipher = cipher.replace("L", "")
-            cipher=cipher.split()
+            cipher = cipher.split()
             new_cipher = []
             for i in cipher:
                 new_cipher.append(int(i))
             print(new_cipher)
             plain = [chr((char ** key1) % key2) for char in new_cipher]
-            print(plain)
-            # cipher = [373L, 144L, 330L, 276L, 196L, 330L, 276L, 196L, 264L, 144L, 168L, 174L, 144L, 330L, 231L, 196L, 40L, 159L, 2L, 179L, 288L, 59L]
-            # key1 = 259
-            # key2 = 391
-            return HttpResponse("Plain Text: " + ''.join(plain) )
+            # print(plain) cipher = [373L, 144L, 330L, 276L, 196L, 330L, 276L, 196L, 264L, 144L, 168L, 174L, 144L,
+            # 330L, 231L, 196L, 40L, 159L, 2L, 179L, 288L, 59L] key1 = 259 key2 = 391
+            return render(request, 'dwk/rsa.html', {'form': form, 'plain': plain})
+            # return HttpResponse("Plain Text: " + ''.join(plain) )
     else:
         form = RSA()
     return render(request, 'dwk/rsa.html', {'form': form})
@@ -632,10 +640,11 @@ def otp(request):
                 return HttpResponse("KEY is shorter than Cipher text")
             plain = ''
             for i in range(0, len(cipher)):
-                plain += chr(((ord(cipher[i])-ord(key[i]))%26)+65)
-            return HttpResponse("{PLAIN TEXT BY OTP METHOD -  " + plain)
+                plain += chr(((ord(cipher[i]) - ord(key[i])) % 26) + 65)
+            return render(request, 'dwk/otp.html', {'form': form, 'plain': plain})
+            # return HttpResponse("{PLAIN TEXT BY OTP METHOD -  " + plain)
         else:
             return HttpResponse("FORM NOT VALID")
     else:
         form = OTP()
-    return render(request,'en/otp.html',{'form':form})
+    return render(request, 'dwk/otp.html', {'form': form})

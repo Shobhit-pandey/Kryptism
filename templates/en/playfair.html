@@ -11,4 +11,13 @@
       {{ form.as_p }}
       <button type="submit">Submit</button>
       </form>
+      {% if cipher %}
+          <script> window.location.hash = '#cipher'; </script>
+          <h2 id="cipher">
+          Cipher text is -
+          <p>
+              {{ cipher }}
+          </p>
+          </h2>
+      {% endif %}
 {% endblock %}

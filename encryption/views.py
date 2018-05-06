@@ -26,15 +26,16 @@ def ceasor(request):
         if form.is_valid():
             plain_text = request.POST['input']
             key = request.POST['key']
-            print(plain_text)
+            # print(plain_text)
             plain_text = str(plain_text)
             plain_text = plain_text.upper()
             cipher = ""
             key = int(key)
             for i in plain_text:
                 cipher += (chr)((ord(i) + key - 65) % 26 + 65)
-            print(cipher)
-            return HttpResponse("Cipher Text : "+cipher)
+            # print(cipher)
+            return render(request, 'en/ceasor.html', {'form': form,'cipher':cipher})
+            # return HttpResponse("Cipher Text : "+cipher)
         else:
             form = Ceasor()
     return render(request, 'en/ceasor.html', {'form': form})
@@ -75,7 +76,8 @@ def vigenere(request):
             cipher = ''
             for i in cipher_text:
                 cipher += i
-            return HttpResponse("Cipher Text : "+(str)(cipher))
+            return render(request, 'en/vigenere.html', {'form': form,'cipher':cipher})
+            # return HttpResponse("Cipher Text : "+(str)(cipher))
         else:
             form = Vigenere()
     return render(request, 'en/vigenere.html', {'form': form})
@@ -187,7 +189,8 @@ def playfair(request):
             message_digraph = playfair_message_to_digraphs(plain_text)
             matrix = playfair_matrix(key)
             cipher_text = playfair_encrypt(plain_text, key)
-            return HttpResponse("Cipher Text : "+str(cipher_text))
+            return render(request, 'en/playfair.html', {'form': form,'cipher':cipher_text})
+            # return HttpResponse("Cipher Text : "+str(cipher_text))
         else:
             form = PlayFair()
     return render(request, 'en/playfair.html', {'form': form})
@@ -232,7 +235,8 @@ def hillcipher(request):
             key = key.upper()
             plain_text = plain_text.upper()
             cipher_text = hillcipher_encrypt(plain_text, alphabet, key, is_square, chunk, stov, vtos)
-            return HttpResponse("Cipher Text : "+cipher_text)
+            return render(request, 'en/hillcipher.html', {'form': form,'cipher':cipher_text})
+            # return HttpResponse("Cipher Text : "+cipher_text)
         else:
             form = HillChipher()
     return render(request, 'en/hillcipher.html', {'form': form})
@@ -250,7 +254,8 @@ def des(request):
             if (len(key) < 8):
                 return HttpResponse("Key must be 8 characters in length")
             cipher_text = des_encrypt(plain_text,key)
-            return HttpResponse("Encrypted text : " +(cipher_text) )
+            return render(request, 'en/des.html', {'form': form,'cipher':cipher_text})
+            # return HttpResponse("Encrypted text : " +(cipher_text) )
         else:
             return HttpResponse("Error in Form")
     else:
@@ -418,8 +423,10 @@ def sdes(request):
             # print("Ciphertext: {} ({})".format(cipher, bin_to_ascii_4bit(cipher)))
             # print("Key: {}".format(key))
             e = sdes_encrypt(plain, key)
-            print("Encrypted: {} ({})".format(e, bin_to_ascii_4bit(e)))
-            return HttpResponse("Plain Text: {} ({})".format(e, bin_to_ascii_4bit(e)))
+            # print("Encrypted: {} ({})".format(e, bin_to_ascii_4bit(e)))
+            cipher = "".format(e, bin_to_ascii_4bit(e))
+            return render(request, 'en/sdes.html', {'form': form,'cipher':cipher})
+            # return HttpResponse()
 
     else:
         form = SDes()
@@ -447,7 +454,8 @@ def tripledes(request):
             plain = str(plain)
             key = str(key)
             encryptdata = tripledes_encrypt(iv, key, plain)
-            return HttpResponse("Encrypted Text: %s" % encryptdata)
+            return render(request, 'en/tripledes.html', {'form': form,'cipher':encryptdata})
+            # return HttpResponse("Encrypted Text: %s" % encryptdata)
     else:
         form = TripleDes()
     return render(request, 'en/tripledes.html', {'form': form})
@@ -464,7 +472,8 @@ def substitution(request):
             key = str(key)
             ss = SimpleSubstitution(key)
             cipher= ss.encipher(plain)
-            return HttpResponse("Encrypted Text: %s" % cipher)
+            return render(request, 'en/substitution.html', {'form': form,'cipher':cipher})
+            # return HttpResponse("Encrypted Text: %s" % cipher)
     else:
         form = Substitution()
     return render(request, 'en/substitution.html', {'form': form})
@@ -558,7 +567,8 @@ def railfence(request):
             key = int(key)
             plain = plain.replace(" ", "")
             cipher = railfence_encryptFence(plain, key, offset=0, debug=False)
-            return HttpResponse("Encrypted Text: %s" % cipher)
+            return render(request, 'en/railfence.html', {'form': form,'cipher':cipher})
+            # return HttpResponse("Encrypted Text: %s" % cipher)
     else:
         form = RailFence()
     return render(request, 'en/railfence.html', {'form': form})
@@ -676,7 +686,8 @@ def rsa(request):
             public, private = rsa_generate_keypair(prime1, prime2)
             encrypted_msg = rsa_encrypt(public, plain)
             cipher = ''.join(map(lambda x: str(x), encrypted_msg))
-            return HttpResponse("Encrypted Text: " + str(encrypted_msg) + " public key "+ str(public) + "private key = " + str(private))
+            return render(request, 'en/rsa.html', {'form': form,'cipher':cipher,'public_key':public,'private':private})
+            # return HttpResponse("Encrypted Text: " + str(encrypted_msg) + " public key "+ str(public) + "private key = " + str(private))
     else:
         form = RSA()
     return render(request, 'en/rsa.html', {'form': form})
@@ -695,7 +706,8 @@ def otp(request):
             cipher = ''
             for i in range(0, len(plain)):
                 cipher += chr(((ord(plain[i]) + ord(key[i]) - 130)%26) + 65)
-            return HttpResponse("CIPHER TEXT BY OTP METHOD -  " + cipher)
+            return render(request, 'en/otp.html', {'form': form,'cipher':cipher})
+            # return HttpResponse("CIPHER TEXT BY OTP METHOD -  " + cipher)
         else:
             return HttpResponse("FORM NOT VALID")
     else:
